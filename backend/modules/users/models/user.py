@@ -14,4 +14,4 @@ class User(BaseModel):
     name: Mapped[str] = mapped_column(String)
     role: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime)
-    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)

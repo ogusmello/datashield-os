@@ -5,7 +5,6 @@ from typing import Optional
 from pydantic import BaseModel
 
 class CreateUser(BaseModel):
-    id: UUID
     email: str
     password_hash: str
     name: str
@@ -16,3 +15,7 @@ class UpdateUser(BaseModel):
     password_hash: Optional[str]
     name: Optional[str]
     role: Optional[str]
+    
+class LoginUser(BaseModel):
+    email: str
+    password: str
