@@ -6,10 +6,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from modules.users.models.user import User
-from modules.users.schemas.user import CreateUser, UpdateUser
+from modules.users.schemas.user import CreateUser, UpdateUser, LoginUser
 from modules.core.database import get_db
+from modules.users.helpers.user import PasswordManager
+
+from modules.users.helpers.user import UserControllerHelpers
 
 user_router = APIRouter()
+helpers = UserControllerHelpers()
 
 @user_router.get('/')
 def get_all_users(db: Session = Depends(get_db)):
@@ -21,10 +25,12 @@ def get_user_by_id(id: UUID, db: Session = Depends(get_db)):
 
 @user_router.post('/')
 def create_user(user_obj: CreateUser, db: Session = Depends(get_db)):
+    password_manager = PasswordManager()
+    
     user = User(
         id = uuid4(),
         email = user_obj.email,
-        password_hash = user_obj.password_hash,
+        password_hash = password_manager.get_password_hash(password=user_obj.password_hash),
         name = user_obj.name,
         role = user_obj.role,
         created_at = datetime.now(),
@@ -32,10 +38,26 @@ def create_user(user_obj: CreateUser, db: Session = Depends(get_db)):
 
     db.add(user)
     db.commit()
-    db.refresh()
+    db.refresh(user)
 
     return {"message": "User created", "data": user}
 
+@user_router.post('/login')
+def validate_login(user_obj: LoginUser, db: Session = Depends(get_db)):
+    email = user_obj.email
+    plain_pwd = user_obj.password
+    
+    db_user = db.query(User).filter(User.email == email).first()
+
+    if not db_user:
+        return 'User not found'
+    
+    verify_pwd = helpers.verify_password(db_user.id, plain_pwd, db)
+    if verify_pwd:
+        return "JWT"
+    
+    return 'Password wrong'
+    
 @user_router.patch('/{id}')
 def patch_user_by_id(id: UUID, user_obj: UpdateUser, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.id == id).first()
@@ -56,7 +78,7 @@ def patch_user_by_id(id: UUID, user_obj: UpdateUser, db: Session = Depends(get_d
         if(user_obj.role):
             db_user.role = user_obj.role
 
-        db.updated_at = datetime.now()
+        db_user.updated_at = datetime.now()
 
         db.commit()
         db.refresh(db_user)
@@ -64,8 +86,6 @@ def patch_user_by_id(id: UUID, user_obj: UpdateUser, db: Session = Depends(get_d
         return db_user
 
     return 'User not found'
-    
-
 
 @user_router.delete('/{id}')
 def delete_user_by_id(id: UUID, db: Session = Depends(get_db)):
@@ -74,7 +94,7 @@ def delete_user_by_id(id: UUID, db: Session = Depends(get_db)):
     if(db_user):
         db.delete(db_user)
         db.commit()
-        db.refresh()
+        db.refresh(db_user)
         return 'User Deleted'
     
     return 'User not found.'
