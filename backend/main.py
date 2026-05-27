@@ -6,7 +6,9 @@ from modules.core.models import BaseModel
 from modules.application.controllers import (
     connector_router,
     application_router,
-    connection_router
+    connection_router,
+    application_leaf_router,
+    application_leaf_review_router
 )
 
 from modules.users.controllers.user import user_router
@@ -25,7 +27,10 @@ def health_check():
     return 'API Running'
 
 app.include_router(router=api_router, tags=["API"])
-app.include_router(router=connector_router, prefix='/connectors', tags=["Connectors"])
-app.include_router(router=application_router, prefix='/applications', tags=["Applications"])
-app.include_router(router=connection_router, prefix='/connections', tags=["Connections"])
-app.include_router(router=user_router, prefix='/users', tags=["Users"])
+
+app.include_router(router=connector_router, prefix='/connector', tags=["Connectors"])
+app.include_router(router=application_router, prefix='/application', tags=["Applications"])
+app.include_router(router=connection_router, prefix='/connection', tags=["Connections"])
+app.include_router(router=user_router, prefix='/user', tags=["Users"])
+app.include_router(router=application_leaf_router, prefix='/application/leaf', tags=["Application Leaf"])
+app.include_router(router=application_leaf_review_router, prefix='/application/leaf/review', tags=["Application Leaf Reviews"])
