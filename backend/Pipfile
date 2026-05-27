@@ -4,7 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
+pwdlib = {extras = ["argon2"], version = "*"}
+sqlalchemy = "*"
+fastapi = {extras = ["standard"], version = "*"}
 
 [dev-packages]
 
